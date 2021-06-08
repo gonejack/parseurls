@@ -72,7 +72,7 @@ func printURLs(text string) {
 		}
 		if weibo {
 			u, err := url.Parse(ref)
-			if err == nil {
+			if err == nil && strings.Contains(u.Host, "weibo") {
 				u.Host = "m.weibo.cn"
 				ref = u.String()
 			}
