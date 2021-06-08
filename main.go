@@ -3,17 +3,20 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/mvdan/xurls"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
+	"strings"
+
+	"github.com/mvdan/xurls"
+	"github.com/spf13/cobra"
 )
 
 var (
-	pattern, _ = xurls.StrictMatchingScheme("https?://")
-	verbose    = false
-	prog       = &cobra.Command{
+	verbose = false
+	weibo   = false
+	prog    = &cobra.Command{
 		Use:   "parseurls [*]",
 		Short: "Command line tool for parse urls from text files or stdin",
 		Run: func(c *cobra.Command, args []string) {
@@ -27,25 +30,21 @@ var (
 
 func init() {
 	prog.Flags().SortFlags = false
-	prog.PersistentFlags().SortFlags = false
-	prog.PersistentFlags().BoolVarP(
-		&verbose,
-		"verbose",
-		"v",
-		false,
-		"verbose",
-	)
-}
 
+	flags := prog.PersistentFlags()
+	{
+		flags.SortFlags = false
+		flags.BoolVarP(&weibo, "weibo", "", false, "weibo special treat")
+		flags.BoolVarP(&verbose, "verbose", "v", false, "verbose")
+	}
+}
 func run(c *cobra.Command, files []string) error {
 	if len(files) == 0 {
 		scan := bufio.NewScanner(os.Stdin)
-
 		for scan.Scan() {
 			text := scan.Text()
 			printURLs(text)
 		}
-
 		return scan.Err()
 	}
 
@@ -62,16 +61,25 @@ func run(c *cobra.Command, files []string) error {
 
 	return nil
 }
-
 func printURLs(text string) {
 	if text == "" {
 		return
 	}
-	for _, url := range pattern.FindAllString(text, -1) {
-		_, _ = fmt.Fprintln(os.Stdout, url)
+
+	for _, ref := range xurls.Strict.FindAllString(text, -1) {
+		if !strings.HasPrefix(ref, "http") {
+			continue
+		}
+		if weibo {
+			u, err := url.Parse(ref)
+			if err == nil {
+				u.Host = "m.weibo.cn"
+				ref = u.String()
+			}
+		}
+		_, _ = fmt.Fprintln(os.Stdout, ref)
 	}
 }
-
 func main() {
 	_ = prog.Execute()
 }
