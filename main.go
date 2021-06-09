@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
 	"strings"
 
@@ -15,7 +14,6 @@ import (
 
 var (
 	verbose = false
-	weibo   = false
 	prog    = &cobra.Command{
 		Use:   "parseurls [*]",
 		Short: "Command line tool for parse urls from text files or stdin",
@@ -34,7 +32,6 @@ func init() {
 	flags := prog.PersistentFlags()
 	{
 		flags.SortFlags = false
-		flags.BoolVarP(&weibo, "weibo", "", false, "weibo special treat")
 		flags.BoolVarP(&verbose, "verbose", "v", false, "verbose")
 	}
 }
@@ -69,13 +66,6 @@ func printURLs(text string) {
 	for _, ref := range xurls.Strict.FindAllString(text, -1) {
 		if !strings.HasPrefix(ref, "http") {
 			continue
-		}
-		if weibo {
-			u, err := url.Parse(ref)
-			if err == nil && strings.Contains(u.Host, "weibo") {
-				u.Host = "m.weibo.cn"
-				ref = u.String()
-			}
 		}
 		_, _ = fmt.Fprintln(os.Stdout, ref)
 	}
