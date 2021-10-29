@@ -12,7 +12,7 @@ import (
 )
 
 type options struct {
-	Verbose bool `help:"Verbose printing."`
+	Verbose bool `short:"v" help:"Verbose printing."`
 
 	Txt []string `arg:"" optional:""`
 }
