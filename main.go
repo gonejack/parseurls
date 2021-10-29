@@ -7,13 +7,11 @@ import (
 	"github.com/gonejack/parseurls/cmd"
 )
 
-func init() {
-	log.SetOutput(os.Stdout)
-}
-
 func main() {
-	err := new(cmd.ParseURLs).Run()
-	if err != nil {
-		log.Fatal(err)
+	log.SetOutput(os.Stdout)
+
+	var c cmd.ParseURLs
+	if e := c.Run(); e != nil {
+		log.Fatal(e)
 	}
 }

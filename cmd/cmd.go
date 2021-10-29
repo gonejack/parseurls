@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -22,7 +21,7 @@ type ParseURLs struct {
 	options
 }
 
-func (c *ParseURLs) Run() (err error) {
+func (c *ParseURLs) Run() error {
 	kong.Parse(&c.options,
 		kong.Name("parseurls"),
 		kong.Description("Command line tool to parse urls from text files or stdin"),
@@ -32,8 +31,7 @@ func (c *ParseURLs) Run() (err error) {
 	if len(c.Txt) == 0 {
 		scan := bufio.NewScanner(os.Stdin)
 		for scan.Scan() {
-			text := scan.Text()
-			printURLs(text)
+			printURLs(scan.Text())
 		}
 		return scan.Err()
 	}
@@ -42,12 +40,13 @@ func (c *ParseURLs) Run() (err error) {
 		if c.Verbose {
 			log.Printf("processing %s", txt)
 		}
-		content, err := ioutil.ReadFile(txt)
+		content, err := os.ReadFile(txt)
 		if err != nil {
 			return err
 		}
 		printURLs(string(content))
 	}
+
 	return nil
 }
 
@@ -55,11 +54,9 @@ func printURLs(text string) {
 	if text == "" {
 		return
 	}
-
 	for _, ref := range xurls.Strict.FindAllString(text, -1) {
-		if !strings.HasPrefix(ref, "http") {
-			continue
+		if strings.HasPrefix(ref, "http") {
+			_, _ = fmt.Fprintln(os.Stdout, ref)
 		}
-		_, _ = fmt.Fprintln(os.Stdout, ref)
 	}
 }
